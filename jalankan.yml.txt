@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04          # ✅ FIX: stabil, hindari masalah lxml di Ubuntu 24.04
+    runs-on: ubuntu-22.04         # ✅ FIX: stabil, hindari masalah lxml di Ubuntu 24.04
     timeout-minutes: 30
 
     steps:
@@ -42,9 +42,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           # Fallback jika requirements.txt kurang
-          pip install feedparser requests beautifulsoup4 lxml python-dateutil bleach
+          pip install feedparser requests beautifulsoup4 lxml python-dateutil bleach google-api-python-client google-auth
           # Verifikasi
-          python -c "import feedparser, requests, bleach, lxml, bs4; print('✅ Packages OK')"
+          python -c "import feedparser, requests, bleach, lxml, bs4, googleapiclient; print('✅ Packages OK')"
 
       # ============ CEK SYNTAX PYTHON ============
       - name: Debug - cek syntax Python
@@ -77,6 +77,14 @@ jobs:
       - name: Jalankan Export HTML
         run: python exportgeminictr.py
 
+      # ============ 3. GOOGLE INDEXING API ============
+      - name: Jalankan Google Indexing
+        env:
+          GOOGLE_CREDENTIALS_JSON: ${{ secrets.index }}
+        run: |
+          echo "Menjalankan skrip pengiriman index ke Google..."
+          python indexer.py
+
       # ============ UPLOAD ARTIFACT ============
       - name: Upload hasil HTML
         if: always()
@@ -86,7 +94,7 @@ jobs:
           path: output/
           retention-days: 3
 
-      # ============ 3. COMMIT & PUSH ============
+      # ============ 4. COMMIT & PUSH ============
       - name: Commit dan Push Perubahan
         run: |
           git config --global user.name "github-actions[bot]"
